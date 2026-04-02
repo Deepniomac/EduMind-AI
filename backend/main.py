@@ -1,14 +1,14 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import os
+from fastapi.middleware.cors import CORSMiddleware 
+import os 
 import requests
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from pydantic import BaseModel 
 
 
 load_dotenv()  # Load environment variables from .env file
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY") 
 
 # FastAPI app initialization 
 app = FastAPI()
@@ -31,19 +31,19 @@ class Query(BaseModel):
     query: str
     
 def query_groq(query: str):
-    url = "https://api.groq.com/openai/v1/chat/completions"
+    url = "https://api.groq.com/openai/v1/chat/completions" 
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Authorization": f"Bearer {GROQ_API_KEY}", 
         "Content-Type": "application/json"
     }
     data = {
-        "model": "llama-3.1-8b-instant",
+        "model": "llama-3.1-8b-instant", 
         "messages": [
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": query}
         ],
         "max_tokens": 1000,
-        "temperature": 0.7
+        "temperature": 0.7 
     }
     response = requests.post(url, headers=headers, json=data)
     if response.status_code == 200:
