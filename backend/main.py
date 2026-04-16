@@ -65,4 +65,3 @@ def ask(query: Query):
 @app.get("/test")
 def test_api():
     return {"reply": "Hello from FastAPI backend!"}
-git 
