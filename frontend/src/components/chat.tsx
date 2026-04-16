@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
+import { useSession } from "../app/session"
 
 type BackendMode = "demo" | "ai"
+type LearningPhase = "idle" | "learn" | "test" | "analyze" | "adjust" | "relearn"
 
 type QuizQuestion = {
   id: string
@@ -9,122 +11,64 @@ type QuizQuestion = {
   correctIndex: number
 }
 
-function detectTopic(rawQuestion: string): "react" | "python" | "general" {
-  const q = rawQuestion.toLowerCase()
-  if (q.includes("react")) return "react"
-  if (q.includes("javascript") || q.includes("typescript") || q.includes("vite")) return "react"
-  if (q.includes("python")) return "python"
-  if (q.includes("fastapi")) return "python"
-  return "general"
-}
-
-function demoGenerateLearn(question: string) {
-  const topic = detectTopic(question)
-  const focus =
-    topic === "react"
-      ? "React state, components, and rendering"
-      : topic === "python"
-        ? "FastAPI request handling and Python basics"
-        : "core concepts and a simple mental model"
-
-  return `Learn (Demo)\n\nYou asked: “${question}”\n\nHere’s the key idea: focus on ${focus}. Break it into 3 parts:\n1) What it is (definition)\n2) How it works (steps)\n3) Why it matters (use-case)\n\nNext, we’ll test your understanding with a quick quiz.`
-}
-
-function demoGenerateQuiz(question: string): QuizQuestion[] {
-  const topic = detectTopic(question)
-
-  if (topic === "react") {
-    return [
-      {
-        id: "q1",
-        prompt: "In React, what should state represent?",
-        options: ["Server database only", "UI data that changes over time", "HTML file content", "Random constants"],
-        correctIndex: 1,
-      },
-      {
-        id: "q2",
-        prompt: "What does a component return?",
-        options: ["Only side effects", "A UI description (JSX)", "A network request", "A CSS file"],
-        correctIndex: 1,
-      },
-      {
-        id: "q3",
-        prompt: "Which hook is used to store local state in a function component?",
-        options: ["useEffect", "useState", "useReducer only", "useMemo only"],
-        correctIndex: 1,
-      },
-    ]
-  }
-
-  if (topic === "python") {
-    return [
-      {
-        id: "q1",
-        prompt: "In FastAPI, what do endpoint functions typically do?",
-        options: ["Only render HTML templates", "Handle HTTP requests and return responses", "Compile React apps", "Manage git branches"],
-        correctIndex: 1,
-      },
-      {
-        id: "q2",
-        prompt: "What is a common way to structure request data in FastAPI?",
-        options: ["Using Pydantic models", "Using plain text only", "Using bash scripts", "Using SQL migrations"],
-        correctIndex: 0,
-      },
-      {
-        id: "q3",
-        prompt: "How do you call an external HTTP API in Python?",
-        options: ["Using requests (commonly)", "Using git push", "Using Vite dev server", "Using CSS variables"],
-        correctIndex: 0,
-      },
-    ]
-  }
-
-  return [
-    {
-      id: "q1",
-      prompt: "A good study strategy starts with…",
-      options: ["Memorizing without understanding", "Building a mental model", "Skipping practice", "Only reading once"],
-      correctIndex: 1,
-    },
-    {
-      id: "q2",
-      prompt: "Testing your knowledge helps because it…",
-      options: ["Hides weaknesses", "Reveals gaps", "Prevents recall", "Removes context"],
-      correctIndex: 1,
-    },
-    {
-      id: "q3",
-      prompt: "“Adjust” in a learning loop means…",
-      options: ["Do nothing", "Change strategy based on results", "Only take more notes", "Avoid review"],
-      correctIndex: 1,
-    },
-  ]
-}
-
-function demoAnalyzeAndPlan(args: {
+type StoredStudyRecord = {
   question: string
-  quiz: QuizQuestion[]
-  selectedById: Record<string, number | null>
-}) {
-  const { quiz, selectedById } = args
-  const total = quiz.length
-  const correct = quiz.filter((q) => selectedById[q.id] === q.correctIndex).length
-
-  const wrong = quiz
-    .filter((q) => selectedById[q.id] !== q.correctIndex)
-    .map((q) => q.prompt)
-
-  const weaknessText =
-    wrong.length === 0
-      ? "You got everything right. Next, increase difficulty and move faster."
-      : `You missed ${wrong.length} question(s). Re-focus on:\n- ${wrong.join("\n- ")}`
-
-  const analysis = `Analyze (Demo)\n\nScore: ${correct}/${total}\n\n${weaknessText}\n\nWhat to do next: convert the wrong answers into 1-2 short “rules” you can recall quickly.`
-
-  const plan = `Adjust / Revision Plan (Demo)\n\n1) Review the concept behind each missed question.\n2) Write a 1-sentence explanation + a small example.\n3) Re-test using a similar quiz (repeat the loop).\n\nTopic: “${args.question}”`
-
-  return { analysis, plan }
+  answer: string
 }
+
+const studyQuestion = "How does stack work?"
+
+const studyAnswer = `Re-learn
+
+Question: "How does stack work?"
+
+A stack is a linear data structure that follows the Last In, First Out rule.
+
+Think of it like a stack of plates:
+1) You place a new plate on top
+2) You also remove the top plate first
+
+Core operations:
+- push: add an item on top
+- pop: remove the top item
+- peek: view the top item without removing it
+
+Why it matters:
+- function call handling
+- undo and redo actions
+- expression evaluation
+- depth-first search
+
+Mini example:
+Push 10, then 20, then 30
+Top is now 30
+If you pop once, 30 is removed and 20 becomes the new top`
+
+const demoQuiz: QuizQuestion[] = [
+  {
+    id: "q1",
+    prompt: "Which rule defines how a stack works?",
+    options: [
+      "Last In, First Out",
+      "First In, First Out",
+      "Random insertion order",
+      "Circular indexing only",
+    ],
+    correctIndex: 0,
+  },
+  {
+    id: "q2",
+    prompt: "Which operation adds a new item to the top of a stack?",
+    options: ["peek", "enqueue", "push", "swap"],
+    correctIndex: 2,
+  },
+  {
+    id: "q3",
+    prompt: "After pushing 10, 20, and 30, what will pop remove first?",
+    options: ["10", "20", "30", "Nothing"],
+    correctIndex: 2,
+  },
+]
 
 async function askBackendText(prompt: string): Promise<string> {
   const res = await fetch("http://127.0.0.1:8000/", {
@@ -143,26 +87,61 @@ async function askBackendText(prompt: string): Promise<string> {
   return data.response
 }
 
+function demoAnalyzeAndPlan(selectedById: Record<string, number | null>) {
+  const total = demoQuiz.length
+  const correct = demoQuiz.filter((question) => selectedById[question.id] === question.correctIndex).length
+  const missedQuestions = demoQuiz
+    .filter((question) => selectedById[question.id] !== question.correctIndex)
+    .map((question) => question.prompt)
+
+  const analysis =
+    missedQuestions.length === 0
+      ? `Analyze
+
+Score: ${correct}/${total}
+
+You answered every stack question correctly.
+That means the learner already understands the core LIFO rule and can move to implementation details.`
+      : `Analyze
+
+Score: ${correct}/${total}
+
+Focus again on:
+- ${missedQuestions.join("\n- ")}
+
+The learner understands the topic partially, but still needs one more stack revision cycle.`
+
+  const plan = `Adjust / Revision Plan
+
+1) Re-read the stack example with push, pop, and peek.
+2) Practice one real-world use case like undo/redo or function calls.
+3) Re-take the stack mini quiz to confirm the concept is stable.
+
+Re-learn target:
+Use the same question, "${studyQuestion}", and deepen the example.`
+
+  return { analysis, plan }
+}
+
 function Chat() {
-  const [question, setQuestion] = useState("")
+  const { displayName, phase } = useSession()
+  const phaseLabel = phase === "analyze" ? "Analyze" : "Re-learn"
+  const [question, setQuestion] = useState(studyQuestion)
   const [mode, setMode] = useState<BackendMode>("demo")
   const [backendStatus, setBackendStatus] = useState<"idle" | "checking" | "connected" | "disconnected">("idle")
+  const [storedRecord, setStoredRecord] = useState<StoredStudyRecord | null>(null)
 
   const [learnText, setLearnText] = useState("")
   const [quiz, setQuiz] = useState<QuizQuestion[]>([])
   const [selectedById, setSelectedById] = useState<Record<string, number | null>>({})
   const [analysisText, setAnalysisText] = useState("")
   const [planText, setPlanText] = useState("")
-
-  const [activePhase, setActivePhase] = useState<
-    "idle" | "learn" | "test" | "analyze" | "adjust" | "relearn"
-  >("idle")
+  const [activePhase, setActivePhase] = useState<LearningPhase>(phase === "analyze" ? "analyze" : "relearn")
   const [loading, setLoading] = useState(false)
-
-  const topic = useMemo(() => detectTopic(question), [question])
 
   useEffect(() => {
     let cancelled = false
+
     async function check() {
       if (mode !== "ai") return
       setBackendStatus("checking")
@@ -174,70 +153,73 @@ function Chat() {
         if (!cancelled) setBackendStatus("disconnected")
       }
     }
+
     check()
     return () => {
       cancelled = true
     }
   }, [mode])
 
-  function resetCycle(keepQuestion = true) {
-    if (!keepQuestion) setQuestion("")
+  function resetCycle() {
+    setQuestion(studyQuestion)
+    setStoredRecord(null)
     setLearnText("")
     setQuiz([])
     setSelectedById({})
     setAnalysisText("")
     setPlanText("")
-    setActivePhase("idle")
+    setActivePhase(phase === "analyze" ? "analyze" : "relearn")
   }
 
   async function startLearningCycle() {
-    if (!question.trim()) return
+    const sanitizedQuestion = studyQuestion
+    setQuestion(sanitizedQuestion)
     setLoading(true)
-    setActivePhase("learn")
+    setActivePhase(phase === "analyze" ? "analyze" : "relearn")
     setLearnText("")
     setQuiz([])
     setSelectedById({})
     setAnalysisText("")
     setPlanText("")
 
-    // Step 1: Learn (demo always works; AI optional)
     try {
       if (mode === "ai" && backendStatus === "connected") {
         const aiLearn = await askBackendText(
-          `Create a clear study explanation for: "${question}". Keep it structured with headings.`
+          `Explain the topic "${sanitizedQuestion}" in a simple student-friendly way with a push/pop example.`
         )
         setLearnText(aiLearn)
+        setStoredRecord({ question: sanitizedQuestion, answer: aiLearn })
       } else {
-        setLearnText(demoGenerateLearn(question))
+        setLearnText(studyAnswer)
+        setStoredRecord({ question: sanitizedQuestion, answer: studyAnswer })
       }
     } catch {
-      setLearnText(demoGenerateLearn(question))
+      setLearnText(studyAnswer)
+      setStoredRecord({ question: sanitizedQuestion, answer: studyAnswer })
     }
 
-    // Step 2: Test (demo quiz for presentation reliability)
-    const demoQuiz = demoGenerateQuiz(question)
-    setQuiz(demoQuiz)
     const initialSelected: Record<string, number | null> = {}
-    for (const q of demoQuiz) initialSelected[q.id] = null
-    setSelectedById(initialSelected)
+    for (const item of demoQuiz) initialSelected[item.id] = null
 
-    setActivePhase("test")
+    setQuiz(demoQuiz)
+    setSelectedById(initialSelected)
+    setActivePhase(phase === "analyze" ? "analyze" : "relearn")
     setLoading(false)
   }
 
+  function onPick(questionId: string, optionIndex: number) {
+    setSelectedById((current) => ({ ...current, [questionId]: optionIndex }))
+  }
+
   function submitAnswers() {
-    setActivePhase("analyze")
-    const { analysis, plan } = demoAnalyzeAndPlan({ question, quiz, selectedById })
+    setActivePhase(phase === "analyze" ? "analyze" : "relearn")
+    const { analysis, plan } = demoAnalyzeAndPlan(selectedById)
     setAnalysisText(analysis)
     setPlanText(plan)
-    setActivePhase("adjust")
+    setActivePhase(phase === "analyze" ? "analyze" : "relearn")
   }
 
-  function onPick(qid: string, index: number) {
-    setSelectedById((prev) => ({ ...prev, [qid]: index }))
-  }
-
-  const canSubmit = quiz.length > 0 && quiz.every((q) => selectedById[q.id] !== null)
+  const canSubmit = quiz.length > 0 && quiz.every((item) => selectedById[item.id] !== null)
 
   return (
     <div style={{ textAlign: "center", marginTop: 40, padding: 16 }}>
@@ -252,14 +234,19 @@ function Chat() {
             textAlign: "left",
           }}
         >
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              gridTemplateColumns: "minmax(0, 1fr) auto",
+              alignItems: "center",
+            }}
+          >
             <input
               type="text"
-              placeholder="Ask your study question..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               style={{
-                flex: "1 1 320px",
                 padding: 10,
                 fontSize: 16,
                 borderRadius: 8,
@@ -269,31 +256,44 @@ function Chat() {
               }}
             />
             <button
-              disabled={loading || !question.trim()}
+              disabled={loading}
               onClick={startLearningCycle}
               style={{
                 padding: "10px 20px",
                 background: "#1565C0",
                 color: "white",
                 border: "none",
-                cursor: loading || !question.trim() ? "not-allowed" : "pointer",
-                opacity: loading || !question.trim() ? 0.7 : 1,
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.7 : 1,
+                borderRadius: 10,
               }}
             >
-              {loading ? "Generating..." : "Start Learning Cycle"}
+              {loading ? "Generating..." : "Start Re-learn"}
+              {loading ? "Generating..." : `Start ${phaseLabel}`}
             </button>
           </div>
 
-          <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
             <label style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
               <input type="radio" checked={mode === "demo"} onChange={() => setMode("demo")} />
-              Demo mode (works offline)
+              Guided mode
             </label>
             <label style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
               <input type="radio" checked={mode === "ai"} onChange={() => setMode("ai")} />
-              Use backend AI (optional)
+              Use backend AI
             </label>
-
+            <span
+              style={{
+                padding: "4px 10px",
+                borderRadius: 999,
+                border: "1px solid #ffffff33",
+                background: "#00000022",
+                color: "white",
+                fontSize: 12,
+              }}
+            >
+              Study question: {studyQuestion}
+            </span>
             {mode === "ai" ? (
               <span
                 style={{
@@ -307,23 +307,9 @@ function Chat() {
               >
                 Backend: {backendStatus}
               </span>
-            ) : (
-              <span
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 999,
-                  border: "1px solid #ffffff33",
-                  background: "#00000022",
-                  color: "white",
-                  fontSize: 12,
-                }}
-              >
-                Topic guess: {topic}
-              </span>
-            )}
-
+            ) : null}
             <button
-              onClick={() => resetCycle(true)}
+              onClick={resetCycle}
               style={{
                 marginLeft: "auto",
                 padding: "8px 14px",
@@ -337,38 +323,45 @@ function Chat() {
               Reset
             </button>
           </div>
+
+          {storedRecord ? (
+            <div
+              style={{
+                marginTop: 16,
+                padding: 14,
+                borderRadius: 12,
+                border: "1px solid #ffffff22",
+                background: "#08131f",
+              }}
+            >
+              <div style={{ marginBottom: 6, color: "#95a9c4", fontSize: 12, textTransform: "uppercase" }}>
+                Stored study data for {displayName}
+              </div>
+              <div style={{ color: "white", fontWeight: 700 }}>{storedRecord.question}</div>
+              <div style={{ color: "white", opacity: 0.78, marginTop: 6 }}>
+                The answer for this selected study question is stored on the page during this learning cycle.
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-          <StepCard
-            stepIndex={1}
-            title="Learn"
-            active={
-              activePhase === "learn" ||
-              activePhase === "test" ||
-              activePhase === "analyze" ||
-              activePhase === "adjust"
-            }
-          >
+          <StepCard stepIndex={1} title="Learn" active>
             {learnText ? (
               <PreformattedText text={learnText} />
             ) : (
-              <MutedText>Click “Start Learning Cycle” to generate explanation.</MutedText>
+              <MutedText>{`Press “Start ${phaseLabel}” to run the stack study question and store its answer on the page.`}</MutedText>
             )}
           </StepCard>
 
-          <StepCard
-            stepIndex={2}
-            title="Test"
-            active={activePhase === "test" || activePhase === "analyze" || activePhase === "adjust"}
-          >
+          <StepCard stepIndex={2} title="Test" active>
             {quiz.length === 0 ? (
-              <MutedText>Quiz appears here after the Learn step.</MutedText>
+              <MutedText>The stack quiz appears here after the Learn step.</MutedText>
             ) : (
               <div style={{ textAlign: "left" }}>
-                {quiz.map((q) => (
+                {quiz.map((item) => (
                   <div
-                    key={q.id}
+                    key={item.id}
                     style={{
                       marginBottom: 14,
                       padding: 12,
@@ -377,14 +370,14 @@ function Chat() {
                       background: "#ffffff08",
                     }}
                   >
-                    <div style={{ marginBottom: 10, color: "white", fontWeight: 600 }}>{q.prompt}</div>
+                    <div style={{ marginBottom: 10, color: "white", fontWeight: 600 }}>{item.prompt}</div>
                     <div style={{ display: "grid", gap: 8 }}>
-                      {q.options.map((opt, idx) => {
-                        const selected = selectedById[q.id] === idx
+                      {item.options.map((option, index) => {
+                        const selected = selectedById[item.id] === index
                         return (
                           <button
-                            key={idx}
-                            onClick={() => onPick(q.id, idx)}
+                            key={option}
+                            onClick={() => onPick(item.id, index)}
                             disabled={activePhase === "analyze" || activePhase === "adjust"}
                             style={{
                               textAlign: "left",
@@ -397,7 +390,7 @@ function Chat() {
                                 activePhase === "analyze" || activePhase === "adjust" ? "not-allowed" : "pointer",
                             }}
                           >
-                            {String.fromCharCode(65 + idx)}. {opt}
+                            {String.fromCharCode(65 + index)}. {option}
                           </button>
                         )
                       })}
@@ -430,43 +423,47 @@ function Chat() {
             )}
           </StepCard>
 
-          <StepCard
-            stepIndex={3}
-            title="Analyze"
-            active={activePhase === "analyze" || activePhase === "adjust"}
-          >
-            {analysisText ? <PreformattedText text={analysisText} /> : <MutedText>After you submit answers, analysis appears here.</MutedText>}
+          <StepCard stepIndex={3} title="Analyze" active>
+            {analysisText ? (
+              <PreformattedText text={analysisText} />
+            ) : (
+              <MutedText>Answer the stack quiz to generate the analysis.</MutedText>
+            )}
           </StepCard>
 
-          <StepCard stepIndex={4} title="Adjust" active={activePhase === "adjust" || activePhase === "relearn"}>
-            {planText ? <PreformattedText text={planText} /> : <MutedText>Revision plan appears after analysis.</MutedText>}
+          <StepCard stepIndex={4} title="Adjust" active>
+            {planText ? (
+              <PreformattedText text={planText} />
+            ) : (
+              <MutedText>A stack-focused revision plan appears here after analysis.</MutedText>
+            )}
           </StepCard>
 
-          <StepCard stepIndex={5} title="Re-learn" active={activePhase === "relearn"}>
+          <StepCard stepIndex={5} title={phase === "analyze" ? "Analyze" : "Re-learn"} active>
             <div style={{ display: "grid", gap: 10, justifyItems: "start" }}>
               <div style={{ color: "white" }}>
-                Re-run the cycle to practice with the updated plan. (In demo mode, the quiz is regenerated instantly.)
+                The workflow is currently centered on the {phaseLabel.toLowerCase()} phase for {displayName}.
               </div>
               <button
-                disabled={activePhase !== "adjust"}
                 onClick={() => {
-                  setActivePhase("relearn")
-                  // Keep the same question, regenerate the loop from scratch.
-                  setTimeout(() => startLearningCycle(), 50)
+                  setActivePhase(phase === "analyze" ? "analyze" : "relearn")
+                  setTimeout(() => {
+                    void startLearningCycle()
+                  }, 50)
                 }}
                 style={{
                   padding: "10px 20px",
                   background: "#1565C0",
                   color: "white",
                   border: "none",
-                  cursor: activePhase !== "adjust" ? "not-allowed" : "pointer",
-                  opacity: activePhase !== "adjust" ? 0.7 : 1,
+                  cursor: "pointer",
+                  opacity: 1,
                   borderRadius: 10,
                   width: 220,
                   justifySelf: "center",
                 }}
               >
-                Start Re-learn
+                Refresh {phaseLabel}
               </button>
             </div>
           </StepCard>
@@ -520,7 +517,6 @@ function MutedText(props: { children: ReactNode }) {
 }
 
 function PreformattedText(props: { text: string }) {
-  // Render line breaks without pulling in a markdown parser.
   const lines = props.text.split("\n")
   return (
     <div
@@ -530,8 +526,8 @@ function PreformattedText(props: { text: string }) {
         fontSize: 13,
       }}
     >
-      {lines.map((line, idx) => (
-        <div key={idx} style={{ marginBottom: 6 }}>
+      {lines.map((line, index) => (
+        <div key={index} style={{ marginBottom: 6 }}>
           {line === "" ? "\u00A0" : line}
         </div>
       ))}

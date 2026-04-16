@@ -1,16 +1,18 @@
-import Header from "./components/header"
-import Chat from "./components/chat"
+import { RouterProvider } from "react-router-dom"
+import { LoginPage } from "./pages/LoginPage"
+import { SessionProvider, useSession } from "./app/session"
+import { router } from "./app/router"
+
+function AppContent() {
+  const { isAuthenticated } = useSession()
+  return isAuthenticated ? <RouterProvider router={router} /> : <LoginPage />
+}
 
 function App() {
-
   return (
-    <div>
-
-      <Header/>
-
-      <Chat/>
-
-    </div>
+    <SessionProvider>
+      <AppContent />
+    </SessionProvider>
   )
 }
 
