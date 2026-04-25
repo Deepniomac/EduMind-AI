@@ -1,5 +1,10 @@
 import { useState, type FormEvent } from "react"
-import { demoCredentials, useSession } from "../app/session"
+import { useSession } from "../app/useSession"
+
+const demoCredentials = [
+  { username: "Ravidran", password: "EduMind123" },
+  { username: "Keerthiswaran", password: "EduMind123" },
+]
 
 export function LoginPage() {
   const { login } = useSession()
@@ -11,8 +16,21 @@ export function LoginPage() {
     event.preventDefault()
     const ok = login(username, password)
     if (!ok) {
-      setError("Use one of the listed credentials exactly as provided.")
+      setError("Use one of the demo accounts or choose a quick sign-in option.")
+      return
     }
+
+    setError("")
+  }
+
+  function handleQuickSignIn(username: string, password: string) {
+    const ok = login(username, password)
+    if (!ok) {
+      setError("Quick sign-in is temporarily unavailable.")
+      return
+    }
+
+    setError("")
   }
 
   return (
@@ -47,7 +65,14 @@ export function LoginPage() {
         <div className="login-hint">
           {demoCredentials.map((user) => (
             <div key={user.username} className="login-hint__row">
-              <strong>{user.username}</strong> / {user.password}
+              <strong>{user.username}</strong>
+              <button
+                className="app-button"
+                type="button"
+                onClick={() => handleQuickSignIn(user.username, user.password)}
+              >
+                Continue as {user.username}
+              </button>
             </div>
           ))}
         </div>
