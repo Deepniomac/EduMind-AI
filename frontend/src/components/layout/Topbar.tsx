@@ -1,4 +1,4 @@
-import { useSession } from "../../app/session"
+import { useSession } from "../../app/useSession"
 
 export function Topbar({ title }: { title: string }) {
   const { displayName, logout } = useSession()
