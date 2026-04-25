@@ -1,7 +1,8 @@
 import { RouterProvider } from "react-router-dom"
 import { LoginPage } from "./pages/LoginPage"
-import { SessionProvider, useSession } from "./app/session"
+import { SessionProvider } from "./app/session"
 import { router } from "./app/router"
+import { useSession } from "./app/useSession"
 
 function AppContent() {
   const { isAuthenticated } = useSession()
