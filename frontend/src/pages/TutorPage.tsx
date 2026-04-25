@@ -1,4 +1,4 @@
-import { useSession } from "../app/session"
+import { useSession } from "../app/useSession"
 import { PageHeader } from "../components/layout/PageHeader"
 import Chat from "../components/chat"
 
