@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react"
-import { useSession } from "../app/session"
+import { useSession } from "../app/useSession"
 
 type BackendMode = "demo" | "ai"
 type LearningPhase = "idle" | "learn" | "test" | "analyze" | "adjust" | "relearn"
@@ -126,6 +126,7 @@ Use the same question, "${studyQuestion}", and deepen the example.`
 function Chat() {
   const { displayName, phase } = useSession()
   const phaseLabel = phase === "analyze" ? "Analyze" : "Re-learn"
+  const reviewPhase: LearningPhase = "test"
   const [question, setQuestion] = useState(studyQuestion)
   const [mode, setMode] = useState<BackendMode>("demo")
   const [backendStatus, setBackendStatus] = useState<"idle" | "checking" | "connected" | "disconnected">("idle")
@@ -168,14 +169,14 @@ function Chat() {
     setSelectedById({})
     setAnalysisText("")
     setPlanText("")
-    setActivePhase(phase === "analyze" ? "analyze" : "relearn")
+    setActivePhase(reviewPhase)
   }
 
   async function startLearningCycle() {
-    const sanitizedQuestion = studyQuestion
+    const sanitizedQuestion = question.trim() || studyQuestion
     setQuestion(sanitizedQuestion)
     setLoading(true)
-    setActivePhase(phase === "analyze" ? "analyze" : "relearn")
+    setActivePhase("learn")
     setLearnText("")
     setQuiz([])
     setSelectedById({})
@@ -203,7 +204,7 @@ function Chat() {
 
     setQuiz(demoQuiz)
     setSelectedById(initialSelected)
-    setActivePhase(phase === "analyze" ? "analyze" : "relearn")
+    setActivePhase(reviewPhase)
     setLoading(false)
   }
 
@@ -212,11 +213,11 @@ function Chat() {
   }
 
   function submitAnswers() {
-    setActivePhase(phase === "analyze" ? "analyze" : "relearn")
+    setActivePhase("analyze")
     const { analysis, plan } = demoAnalyzeAndPlan(selectedById)
     setAnalysisText(analysis)
     setPlanText(plan)
-    setActivePhase(phase === "analyze" ? "analyze" : "relearn")
+    setActivePhase("adjust")
   }
 
   const canSubmit = quiz.length > 0 && quiz.every((item) => selectedById[item.id] !== null)
@@ -268,7 +269,6 @@ function Chat() {
                 borderRadius: 10,
               }}
             >
-              {loading ? "Generating..." : "Start Re-learn"}
               {loading ? "Generating..." : `Start ${phaseLabel}`}
             </button>
           </div>
