@@ -1,62 +1,55 @@
-\# Technology Stack and Justification
+# Technology Stack and Justification
 
+## Frontend
 
+### React
 
-\## 1. VS Code
+Used to build the user interface with reusable components and page-level composition.
 
-Used as the main development environment to write and manage both frontend and backend code.
+### TypeScript
 
+Used to improve code reliability, safer refactoring, and maintainability in the frontend.
 
+### Vite
 
-\## 2. Node.js
+Used as the frontend development server and build tool for fast local iteration.
 
-Used only as a tool to run and manage frontend development tools such as React and Vite.
+### React Router
 
+Used for page navigation inside the single-page application.
 
+## Backend
 
-\## 3. npm
+### Python
 
-Used to install and manage JavaScript libraries and frontend dependencies.
+Used as the main backend language because it fits API development and future AI-related extensions well.
 
+### FastAPI
 
+Used to expose backend endpoints for the tutor workflow and AI requests.
 
-\## 4. Vite
+### Uvicorn
 
-Used as a modern build tool to create and run the React frontend quickly.
+Used to run the FastAPI application locally.
 
+### Requests
 
+Used by the backend to call the external Groq chat completion API.
 
-\## 5. React
+### python-dotenv
 
-Used to build the user interface of the web application. It provides a fast, component-based, and interactive UI.
+Used to load environment variables such as `GROQ_API_KEY` from local `.env` files during development.
 
+## Development Tools
 
+### npm
 
-\## 6. TypeScript
+Used to manage frontend dependencies and scripts.
 
-Used with React to improve code safety, reliability, and maintainability.
+### Git and GitHub
 
+Used for version control, history management, and remote collaboration.
 
+### VS Code
 
-\## 7. Python
-
-Used as the backend programming language due to its strong ecosystem for AI and data processing.
-
-
-
-\## 8. FastAPI
-
-Used as the backend framework to build a fast, modern, and scalable API-based server.
-
-
-
-\## 9. Uvicorn
-
-Used to run the FastAPI backend server.
-
-
-
-\## 10. Browser (Chrome/Edge)
-
-Used to run and test the frontend application.
-
+Used as the primary development environment.

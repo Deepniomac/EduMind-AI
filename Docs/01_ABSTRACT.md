@@ -1,22 +1,13 @@
-\# EduMind – AI Powered Adaptive Study Assistant
+# EduMind - AI Powered Adaptive Study Assistant
 
+## Abstract
 
+EduMind is a full-stack AI-assisted study platform designed to support students with a structured and adaptive learning process. Unlike conventional chatbot systems that only respond to isolated prompts, EduMind organizes learning into a guided sequence of explanation, testing, analysis, and revision.
 
-\## Abstract
+The current implementation uses a React frontend for the user experience and a FastAPI backend for API logic and AI integration. The tutor workflow demonstrates the platform's learning-cycle model by allowing a learner to start with a topic, review an explanation, attempt a quiz, receive analysis, and continue with a targeted revision step.
 
+The project is centered on the following adaptive workflow:
 
+Learn -> Test -> Analyze -> Adjust -> Re-learn
 
-EduMind is a full-stack web-based AI-powered study assistant platform designed to provide structured, adaptive, and personalized learning support for students. Unlike traditional AI chatbots that only answer user questions, the proposed system focuses on managing the complete learning workflow, including topic explanation, adaptive testing, performance analysis, and revision planning.
-
-
-
-The system is developed using a modern web architecture consisting of a React-based frontend and a Python FastAPI backend. The frontend provides an interactive user interface for students, while the backend handles the core logic and communicates with AI models for intelligent content generation.
-
-
-
-The novelty of the project lies in its adaptive learning cycle, where the system continuously adjusts the learning strategy based on the student’s performance, difficulty level, and progress history. The proposed approach follows a closed-loop learning model: Learn → Test → Analyze → Adjust → Re-learn, making the platform more effective than conventional one-time response-based AI systems.
-
-
-
-This project aims to improve learning efficiency, revision effectiveness, and conceptual understanding by introducing a structured, performance-driven AI-assisted study methodology.
-
+This structure makes the platform useful not only for answering questions, but also for managing how a student studies, checks understanding, and improves over time.

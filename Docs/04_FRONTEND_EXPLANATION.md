@@ -1,34 +1,44 @@
-\# Frontend Explanation
+# Frontend Explanation
 
+The frontend is built with React, TypeScript, and Vite.
 
+## Purpose
 
-The frontend is built using React with TypeScript and Vite.
+The frontend is responsible for:
 
+- collecting learner input
+- handling demo login state
+- routing between pages
+- showing tutor workflow steps
+- calling the backend when AI mode is enabled
 
+## Main Frontend Files
 
-\## Purpose:
+- `src/main.tsx`: React bootstrap entry
+- `src/App.tsx`: wraps the app with the session provider
+- `src/app/SessionContext.ts`: session types and context object
+- `src/app/session.tsx`: session provider logic
+- `src/app/useSession.ts`: shared session hook
+- `src/components/chat.tsx`: tutor interaction flow
+- `src/app/router.tsx`: page routing
 
-\- To provide user interface
+## Login and Session Behavior
 
-\- To collect user input
+- The app uses demo users for the current local workflow
+- Selected users are persisted in `localStorage`
+- The login page now supports quick sign-in buttons
+- Raw demo passwords are no longer displayed in the page UI
 
-\- To display responses from backend
+## Tutor Page Behavior
 
+The tutor page supports both demo mode and backend AI mode.
 
+When a learner starts a cycle, the page:
 
-\## Main Files:
+1. uses the typed study question
+2. loads a learning explanation
+3. presents quiz questions
+4. analyzes the selected answers
+5. builds a revision plan
 
-\- main.tsx: Entry point of React application
-
-\- App.tsx: Main UI component
-
-
-
-\## How It Works:
-
-\- The React app runs at http://localhost:5173
-
-\- It uses fetch() to call backend APIs
-
-\- It displays the received data on the screen.
-
+The recent update also fixed the quiz flow so users in the analyze phase are no longer blocked from answering questions.
