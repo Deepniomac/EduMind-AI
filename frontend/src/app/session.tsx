@@ -1,28 +1,11 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react"
-
-export type LearningPhase = "analyze" | "relearn"
+import { useMemo, useState, type ReactNode } from "react"
+import { SessionContext, type LearningPhase, type SessionState } from "./SessionContext"
 
 type DemoUser = {
   username: string
   password: string
   displayName: string
   phase: LearningPhase
-}
-
-type SessionState = {
-  isAuthenticated: boolean
-  displayName: string
-  username: string
-  phase: LearningPhase
-  login: (username: string, password: string) => boolean
-  logout: () => void
 }
 
 const demoUsers: DemoUser[] = [
@@ -40,27 +23,24 @@ const demoUsers: DemoUser[] = [
   },
 ]
 
-const SessionContext = createContext<SessionState | null>(null)
+const defaultUser = demoUsers[1]
 
 function getDefaultUser(): DemoUser {
-  return demoUsers[1]
+  return defaultUser
+}
+
+function getStoredUser(): DemoUser | null {
+  const stored = window.localStorage.getItem("edumind-demo-user")
+  if (!stored) return null
+
+  return (
+    demoUsers.find((user) => user.username.toLowerCase() === stored.toLowerCase()) ??
+    null
+  )
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [activeUser, setActiveUser] = useState<DemoUser | null>(null)
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem("edumind-demo-user")
-    if (!stored) return
-
-    const matchedUser = demoUsers.find(
-      (user) => user.username.toLowerCase() === stored.toLowerCase(),
-    )
-
-    if (matchedUser) {
-      setActiveUser(matchedUser)
-    }
-  }, [])
+  const [activeUser, setActiveUser] = useState<DemoUser | null>(() => getStoredUser())
 
   const value = useMemo<SessionState>(
     () => ({
@@ -94,12 +74,3 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }
 
-export function useSession() {
-  const context = useContext(SessionContext)
-  if (!context) {
-    throw new Error("useSession must be used within SessionProvider")
-  }
-  return context
-}
-
-export const demoCredentials = demoUsers
