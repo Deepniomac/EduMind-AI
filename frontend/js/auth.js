@@ -35,7 +35,7 @@ function normalizePhase(phase) {
 }
 
 function normalizeSession(session) {
-  if (!session) return null
+  if (!session || !session.token) return null
   return {
     token: session.token,
     username: session.username,
