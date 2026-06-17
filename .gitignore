@@ -1,6 +1,8 @@
-﻿.env
+.env
 
 backend/.env
 backend/venv/
 frontend/dist/
 backend/__pycache__/
+backend/*.db
+

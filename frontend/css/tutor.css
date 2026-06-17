@@ -1,0 +1,125 @@
+.tutor-controls,
+.step-grid,
+.question-list {
+  display: grid;
+  gap: 18px;
+}
+
+.tutor-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.mode-toggle,
+.tutor-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mode-toggle button,
+.answer-option {
+  border-radius: 14px;
+  border: 1px solid rgba(151, 182, 214, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.mode-toggle button {
+  padding: 10px 14px;
+}
+
+.mode-toggle .is-active,
+.answer-option.is-selected {
+  background: rgba(21, 101, 192, 0.18);
+  border-color: rgba(144, 202, 249, 0.22);
+}
+
+.inline-banner {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(151, 182, 214, 0.12);
+  line-height: 1.55;
+}
+
+.study-record,
+.step-card,
+.question-panel {
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(151, 182, 214, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.step-card__header,
+.step-card__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.step-card__title-wrap {
+  justify-content: flex-start;
+}
+
+.step-index {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(21, 101, 192, 0.18);
+  border: 1px solid rgba(144, 202, 249, 0.18);
+  font-weight: 700;
+}
+
+.step-state {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.preformatted-block {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  color: rgba(244, 248, 252, 0.9);
+}
+
+.answer-options {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.answer-option {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+}
+
+.inline-banner--warning {
+  background: rgba(244, 188, 98, 0.12);
+  color: #ffd897;
+}
+
+.inline-banner--danger {
+  background: rgba(239, 107, 115, 0.12);
+  color: #ffadb4;
+}
+
+.inline-banner--success {
+  background: rgba(87, 199, 133, 0.14);
+  color: #b3efc9;
+}
+
+@media (max-width: 720px) {
+  .tutor-input-row {
+    grid-template-columns: 1fr;
+  }
+
+  .step-card__header {
+    align-items: flex-start;
+  }
+}

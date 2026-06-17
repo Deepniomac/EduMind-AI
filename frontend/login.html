@@ -3,21 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EduMind</title>
+    <title>EduMind Login</title>
     <link rel="stylesheet" href="./css/style.css" />
     <link rel="stylesheet" href="./css/dashboard.css" />
     <link rel="stylesheet" href="./css/tutor.css" />
   </head>
   <body class="page-body page-body--centered">
-    <main class="redirect-card">
-      <p class="page-chip">EduMind</p>
-      <h1>Loading your learning workspace</h1>
-      <p>Redirecting you to the right page based on the saved session.</p>
-    </main>
-    <script type="module">
-      import { redirectFromIndex } from "./js/auth.js"
-
-      redirectFromIndex()
-    </script>
+    <div id="app"></div>
+    <script type="module" src="./js/auth.js"></script>
   </body>
 </html>
